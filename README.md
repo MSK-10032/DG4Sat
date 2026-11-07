@@ -6,9 +6,9 @@
 
 鸣谢以下项目:[Look4Sat](https://github.com/rt-bishop/Look4Sat)&[dglab-bluetooth-protocol](https://github.com/dungeonlab-open/dglab-bluetooth-protocol)
 
-<img width="250" alt="Screenshot_2026-11-07-22-25-16-720_top bravocn dg4sat" src="https://github.com/user-attachments/assets/9b60555c-6c17-4018-9649-c35122410cab" />
-<img width="250" alt="Screenshot_2026-11-07-22-25-22-611_top bravocn dg4sat" src="https://github.com/user-attachments/assets/e1ec41ab-3d2e-43e6-aad2-f8a2812cea1d" />
-<img width="250" alt="Screenshot_2026-11-07-22-25-25-113_top bravocn dg4sat" src="https://github.com/user-attachments/assets/1754d61f-b306-462b-8fce-bb62465235a4" />
+<img width="300" alt="Screenshot_2026-11-07-22-25-16-720_top bravocn dg4sat" src="https://github.com/user-attachments/assets/9b60555c-6c17-4018-9649-c35122410cab" />
+<img width="300" alt="Screenshot_2026-11-07-22-25-22-611_top bravocn dg4sat" src="https://github.com/user-attachments/assets/e1ec41ab-3d2e-43e6-aad2-f8a2812cea1d" />
+<img width="300" alt="Screenshot_2026-11-07-22-25-25-113_top bravocn dg4sat" src="https://github.com/user-attachments/assets/1754d61f-b306-462b-8fce-bb62465235a4" />
 
 
 # Look4Sat: Satellite tracker
