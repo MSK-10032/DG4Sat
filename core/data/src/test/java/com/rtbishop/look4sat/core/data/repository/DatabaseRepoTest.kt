@@ -17,6 +17,7 @@
  */
 package com.rtbishop.look4sat.core.data.repository
 
+import com.rtbishop.look4sat.core.domain.model.CoyoteSettings
 import com.rtbishop.look4sat.core.domain.model.DataSourcesSettings
 import com.rtbishop.look4sat.core.domain.model.DatabaseState
 import com.rtbishop.look4sat.core.domain.model.OtherSettings
@@ -377,6 +378,8 @@ private class FakeSettingsRepo(dataSources: DataSourcesSettings = defaultDataSou
         OtherSettings(false, false, false, false, false, false, false, false)
     )
 
+    override val coyoteSettings: StateFlow<CoyoteSettings> = MutableStateFlow(CoyoteSettings())
+
     override val dataSourcesSettings: MutableStateFlow<DataSourcesSettings> = MutableStateFlow(dataSources)
 
     override val dataSourcesStatus: MutableStateFlow<Map<String, Int>> = MutableStateFlow(emptyMap())
@@ -405,6 +408,8 @@ private class FakeSettingsRepo(dataSources: DataSourcesSettings = defaultDataSou
     override fun updateRCSettings(settings: RCSettings) = Unit
 
     override fun updateOtherSettings(transform: (OtherSettings) -> OtherSettings) = Unit
+
+    override fun updateCoyoteSettings(settings: CoyoteSettings) = Unit
 
     override fun updateDataSourcesSettings(settings: DataSourcesSettings) {
         dataSourcesSettings.value = settings

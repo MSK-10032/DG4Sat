@@ -28,6 +28,7 @@ import com.rtbishop.look4sat.core.data.database.DATABASE_NAME
 import com.rtbishop.look4sat.core.data.database.MIGRATION_1_2
 import com.rtbishop.look4sat.core.data.database.Look4SatDb
 import com.rtbishop.look4sat.core.data.framework.BluetoothReporter
+import com.rtbishop.look4sat.core.data.framework.CoyoteLink
 import com.rtbishop.look4sat.core.data.framework.Ft817Controller
 import com.rtbishop.look4sat.core.data.framework.Ic705Controller
 import com.rtbishop.look4sat.core.data.framework.NetworkReporter
@@ -45,6 +46,7 @@ import com.rtbishop.look4sat.core.data.usecase.AudioCapture
 import com.rtbishop.look4sat.core.data.usecase.SaveImage
 import com.rtbishop.look4sat.core.data.usecase.ShowToast
 import com.rtbishop.look4sat.core.domain.model.RadioControlSettings
+import com.rtbishop.look4sat.core.domain.repository.ICoyoteLink
 import com.rtbishop.look4sat.core.domain.repository.IDatabaseRepo
 import com.rtbishop.look4sat.core.domain.repository.IMainContainer
 import com.rtbishop.look4sat.core.domain.repository.IRadioController
@@ -81,6 +83,9 @@ class MainContainer(private val context: Context) : IMainContainer {
     override val radioTrackingService: IRadioTrackingService by lazy {
         val manager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         RadioTrackingService(appScope, manager, satelliteRepo, settingsRepo)
+    }
+    override val coyoteLink: ICoyoteLink by lazy {
+        CoyoteLink(context.applicationContext, appScope, settingsRepo)
     }
 
     override fun provideAddToCalendar(): IAddToCalendar = AddToCalendar(context)

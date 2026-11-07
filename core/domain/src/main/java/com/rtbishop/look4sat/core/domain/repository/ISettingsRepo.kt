@@ -17,6 +17,7 @@
  */
 package com.rtbishop.look4sat.core.domain.repository
 
+import com.rtbishop.look4sat.core.domain.model.CoyoteSettings
 import com.rtbishop.look4sat.core.domain.model.DataSourcesSettings
 import com.rtbishop.look4sat.core.domain.model.DatabaseState
 import com.rtbishop.look4sat.core.domain.model.OtherSettings
@@ -80,6 +81,11 @@ interface ISettingsRepo {
     //region # Radio control settings
     val radioControlSettings: StateFlow<RadioControlSettings>
     fun updateRadioControlSettings(settings: RadioControlSettings)
+    //endregion
+
+    //region # DG-LAB Coyote settings
+    val coyoteSettings: StateFlow<CoyoteSettings>
+    fun updateCoyoteSettings(settings: CoyoteSettings)
     //endregion
 
     //region # Per-satellite calculator offset settings

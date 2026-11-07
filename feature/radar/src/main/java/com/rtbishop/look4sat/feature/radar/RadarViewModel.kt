@@ -22,11 +22,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.rtbishop.look4sat.core.domain.model.CoyoteSettings
 import com.rtbishop.look4sat.core.domain.model.SatRadio
+import com.rtbishop.look4sat.core.domain.model.sanitized
 import com.rtbishop.look4sat.core.domain.predict.CelestialComputer
 import com.rtbishop.look4sat.core.domain.predict.OrbitalObject
 import com.rtbishop.look4sat.core.domain.predict.OrbitalPass
 import com.rtbishop.look4sat.core.domain.predict.OrbitalPos
+import com.rtbishop.look4sat.core.domain.predict.RAD2DEG
+import com.rtbishop.look4sat.core.domain.repository.ICoyoteLink
 import com.rtbishop.look4sat.core.domain.repository.IMainContainer
 import com.rtbishop.look4sat.core.domain.repository.IRadioTrackingService
 import com.rtbishop.look4sat.core.domain.repository.IReporter
@@ -39,6 +43,7 @@ import com.rtbishop.look4sat.core.domain.usecase.IAudioCapture
 import com.rtbishop.look4sat.core.domain.usecase.IAddToCalendar
 import com.rtbishop.look4sat.core.domain.usecase.ISaveImage
 import com.rtbishop.look4sat.core.domain.usecase.IShowToast
+import com.rtbishop.look4sat.core.domain.utility.CoyoteCalculator
 import com.rtbishop.look4sat.core.domain.utility.round
 import com.rtbishop.look4sat.core.domain.utility.toDegrees
 import com.rtbishop.look4sat.core.domain.utility.toTimerString
@@ -65,6 +70,7 @@ class RadarViewModel(
     private val sensorsRepo: ISensorsRepo,
     private val addToCalendar: IAddToCalendar,
     private val trackingService: IRadioTrackingService,
+    private val coyoteLink: ICoyoteLink,
     private val audioCapture: IAudioCapture,
     private val saveImage: ISaveImage,
     private val showToast: IShowToast
@@ -79,6 +85,9 @@ class RadarViewModel(
     private var sstvDecoder: SstvDecoder? = null
     private var sstvRecordingJob: Job? = null
     private var sensorCollectionJob: Job? = null
+    private var sensorsEnabledBySettings = settingsRepo.otherSettings.value.stateOfSensors
+    private var coyoteArmed = false
+    private var sensorSampleCount = 0
 
     // Celestial positions change slowly, recompute at most once per minute
     private var lastCelestialUpdateMs = 0L
@@ -91,7 +100,9 @@ class RadarViewModel(
             orientationValues = sensorsRepo.sensorData.value,
             shouldShowSweep = settingsRepo.otherSettings.value.stateOfSweep,
             shouldUseCompass = settingsRepo.otherSettings.value.stateOfSensors,
-            sstv = SstvSubState(selectedMode = settingsRepo.otherSettings.value.sstvMode)
+            sstv = SstvSubState(selectedMode = settingsRepo.otherSettings.value.sstvMode),
+            coyoteSettings = settingsRepo.coyoteSettings.value,
+            coyote = coyoteLink.state.value
         )
     )
     val uiState: StateFlow<RadarState> = _uiState
@@ -104,17 +115,22 @@ class RadarViewModel(
         collectStationPositionChanges()
         collectPassAndStartTickLoop()
         collectRadioTrackingState()
+        collectCoyoteSettings()
+        collectCoyoteState()
     }
 
     // Starts sensor collection if not already running.
     private fun startSensorCollection() {
         if (sensorCollectionJob?.isActive == true) return
         sensorCollectionJob = viewModelScope.launch {
+            sensorSampleCount = 0
             sensorsRepo.enableSensor()
             sensorsRepo.sensorData.collect { data ->
+                sensorSampleCount++
                 val orientationValues =
                     (data.first + magDeclination + compassOffset) to (data.second + compassOffsetElev)
                 _uiState.update { it.copy(orientationValues = orientationValues) }
+                updateCoyotePointing()
             }
         }
     }
@@ -131,19 +147,18 @@ class RadarViewModel(
             settingsRepo.otherSettings.collect { settings ->
                 compassOffset = settings.radarCompassOffset
                 compassOffsetElev = settings.radarCompassOffsetElev
+                sensorsEnabledBySettings = settings.stateOfSensors
                 _uiState.update {
                     it.copy(
                         isUtc = settings.stateOfUtc,
                         shouldShowSweep = settings.stateOfSweep,
-                        shouldUseCompass = settings.stateOfSensors,
+                        shouldUseCompass = settings.stateOfSensors || coyoteArmed,
                         shouldFlipRadar = settings.radarCompassOffsetElev < 0f
                     )
                 }
-                // Reactively wire sensor hardware to the compass setting
-                when {
-                    settings.stateOfSensors -> startSensorCollection()
-                    else -> stopSensorCollection()
-                }
+                // The compass is also needed while the Coyote link is armed, even if the
+                // user turned the radar compass off in the settings.
+                refreshSensorCollection()
             }
         }
     }
@@ -227,6 +242,7 @@ class RadarViewModel(
         }
         processRadios(allRadios, pass.orbitalObject, timeNow)
         sendPassData(pos)
+        updateCoyotePointing()
     }
 
     // Logs the computed celestial positions once when the screen opens, and again whenever the
@@ -279,6 +295,8 @@ class RadarViewModel(
     }
 
     override fun onCleared() {
+        coyoteLink.disarm()
+        coyoteLink.stopScan()
         stopSensorCollection()
     }
 
@@ -361,7 +379,107 @@ class RadarViewModel(
                 val offsetKHz = action.catnum?.let { settingsRepo.getSatelliteOffset(it) } ?: ""
                 _uiState.update { it.copy(calculatorOffsetKHz = offsetKHz) }
             }
+
+            // DG-LAB Coyote actions
+            is RadarAction.SetCoyoteInitialStrength -> updateCoyoteSettings { current ->
+                current.copy(initialStrength = action.value.coerceIn(0, current.maxStrength))
+            }
+            is RadarAction.SetCoyoteMaxStrength -> updateCoyoteSettings { current ->
+                val max = action.value.coerceIn(0, CoyoteSettings.STRENGTH_MAX)
+                current.copy(
+                    maxStrength = max,
+                    initialStrength = current.initialStrength.coerceAtMost(max)
+                )
+            }
+            is RadarAction.SetCoyoteStartAngle -> updateCoyoteSettings { current ->
+                val start = action.value.coerceIn(0f, 178f)
+                current.copy(
+                    startAngle = start,
+                    fullAngle = current.fullAngle.coerceIn(start + 1f, MAX_DEVIATION_ANGLE)
+                )
+            }
+            is RadarAction.SetCoyoteFullAngle -> updateCoyoteSettings { current ->
+                val start = current.startAngle.coerceIn(0f, 178f)
+                current.copy(fullAngle = action.value.coerceIn(start + 1f, MAX_DEVIATION_ANGLE))
+            }
+            is RadarAction.SetCoyoteChannel -> updateCoyoteSettings { current ->
+                current.copy(channel = action.channel)
+            }
+            RadarAction.ToggleCoyoteArm -> {
+                if (coyoteLink.state.value.armed) {
+                    coyoteLink.disarm()
+                } else {
+                    updateCoyotePointing()
+                    coyoteLink.arm()
+                }
+            }
+            RadarAction.DisarmCoyote -> coyoteLink.disarm()
+            RadarAction.PanicCoyote -> coyoteLink.panic()
+            is RadarAction.ConnectCoyote -> coyoteLink.connect(action.device)
+            RadarAction.ConnectSavedCoyote -> coyoteLink.connectSaved()
+            RadarAction.DisconnectCoyote -> coyoteLink.disconnect()
+            RadarAction.StartCoyoteScan -> coyoteLink.startScan()
+            RadarAction.StopCoyoteScan -> coyoteLink.stopScan()
         }
+    }
+
+    private fun collectCoyoteSettings() {
+        viewModelScope.launch {
+            settingsRepo.coyoteSettings.collect { settings ->
+                _uiState.update { it.copy(coyoteSettings = settings) }
+            }
+        }
+    }
+
+    private fun collectCoyoteState() {
+        viewModelScope.launch {
+            coyoteLink.state.collect { coyote ->
+                val wasArmed = coyoteArmed
+                coyoteArmed = coyote.armed
+                _uiState.update {
+                    it.copy(
+                        coyote = coyote,
+                        shouldUseCompass = sensorsEnabledBySettings || coyote.armed
+                    )
+                }
+                if (wasArmed != coyote.armed) {
+                    refreshSensorCollection()
+                    if (coyote.armed) updateCoyotePointing()
+                }
+            }
+        }
+    }
+
+    private fun updateCoyoteSettings(transform: (CoyoteSettings) -> CoyoteSettings) {
+        val current = settingsRepo.coyoteSettings.value.sanitized()
+        settingsRepo.updateCoyoteSettings(transform(current))
+    }
+
+    private fun refreshSensorCollection() {
+        if (sensorsEnabledBySettings || coyoteArmed) {
+            startSensorCollection()
+        } else {
+            stopSensorCollection()
+        }
+    }
+
+    /** Feeds the current phone aim and satellite position to the Coyote output engine. */
+    private fun updateCoyotePointing() {
+        val currentState = _uiState.value
+        val position = currentState.orbitalPos
+        // The first emission of the sensor flow is its placeholder value, so wait for a real sample.
+        val targetValid = position?.aboveHorizon == true && sensorSampleCount > 1
+        val deviation = if (position == null) {
+            180.0
+        } else {
+            CoyoteCalculator.deviationDeg(
+                currentState.orientationValues.first.toDouble(),
+                currentState.orientationValues.second.toDouble(),
+                position.azimuth * RAD2DEG,
+                position.elevation * RAD2DEG
+            )
+        }
+        coyoteLink.setPointing(deviation, targetValid)
     }
 
     private fun computeTimer(isDeepSpace: Boolean, aosTime: Long, losTime: Long, timeNow: Long): Pair<String, Boolean> {
@@ -482,6 +600,8 @@ class RadarViewModel(
     }
 
     companion object {
+        private const val MAX_DEVIATION_ANGLE = 180f
+
         // SSTV Decoder Tuning Parameters
         // ==============================
         // SSTV_TARGET_RMS: Normalized signal level before FM demodulation.
@@ -533,6 +653,7 @@ class RadarViewModel(
                     sensorsRepo = container.provideSensorsRepo(),
                     addToCalendar = container.provideAddToCalendar(),
                     trackingService = container.radioTrackingService,
+                    coyoteLink = container.coyoteLink,
                     audioCapture = container.provideAudioCapture(),
                     saveImage = container.provideSaveImage(),
                     showToast = container.provideShowToast()

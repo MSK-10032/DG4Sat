@@ -23,12 +23,15 @@ import android.location.LocationManager
 import androidx.core.content.edit
 import androidx.core.location.LocationListenerCompat
 import androidx.core.location.LocationManagerCompat
+import com.rtbishop.look4sat.core.domain.model.CoyoteChannel
+import com.rtbishop.look4sat.core.domain.model.CoyoteSettings
 import com.rtbishop.look4sat.core.domain.model.DataSourcesSettings
 import com.rtbishop.look4sat.core.domain.model.DatabaseState
 import com.rtbishop.look4sat.core.domain.model.OtherSettings
 import com.rtbishop.look4sat.core.domain.model.PassesSettings
 import com.rtbishop.look4sat.core.domain.model.RCSettings
 import com.rtbishop.look4sat.core.domain.model.RadioControlSettings
+import com.rtbishop.look4sat.core.domain.model.sanitized
 import com.rtbishop.look4sat.core.domain.model.Constants
 import com.rtbishop.look4sat.core.domain.predict.GeoPos
 import com.rtbishop.look4sat.core.domain.repository.ISettingsRepo
@@ -50,6 +53,13 @@ class SettingsRepo(
 ) : ISettingsRepo, LocationListenerCompat {
 
     private val keyBluetoothRotatorAddress = "bluetoothAddress"
+    private val keyCoyoteDeviceAddress = "coyoteDeviceAddress"
+    private val keyCoyoteDeviceName = "coyoteDeviceName"
+    private val keyCoyoteInitialStrength = "coyoteInitialStrength"
+    private val keyCoyoteMaxStrength = "coyoteMaxStrength"
+    private val keyCoyoteStartAngle = "coyoteStartAngle"
+    private val keyCoyoteFullAngle = "coyoteFullAngle"
+    private val keyCoyoteChannel = "coyoteChannel"
     private val keyBluetoothRotatorName = "bluetoothName"
     private val keyBluetoothRotatorFormat = "bluetoothFormat"
     private val keyBluetoothRotatorState = "bluetoothState"
@@ -341,6 +351,39 @@ class SettingsRepo(
         bluetoothFrequencyAddress = preferences.getString(keyBluetoothFrequencyAddress, null) ?: "00:0C:BF:13:80:5D",
         bluetoothFrequencyFormat = preferences.getString(keyBluetoothFrequencyFormat, null) ?: $$"F $FREQ"
     )
+    //endregion
+
+    //region # DG-LAB Coyote settings
+    private val _coyoteSettings = MutableStateFlow(getCoyoteSettings())
+    override val coyoteSettings: StateFlow<CoyoteSettings> = _coyoteSettings
+
+    override fun updateCoyoteSettings(settings: CoyoteSettings) {
+        val safe = settings.sanitized()
+        preferences.edit {
+            putString(keyCoyoteDeviceAddress, safe.deviceAddress)
+            putString(keyCoyoteDeviceName, safe.deviceName)
+            putInt(keyCoyoteInitialStrength, safe.initialStrength)
+            putInt(keyCoyoteMaxStrength, safe.maxStrength)
+            putFloat(keyCoyoteStartAngle, safe.startAngle)
+            putFloat(keyCoyoteFullAngle, safe.fullAngle)
+            putString(keyCoyoteChannel, safe.channel.name)
+        }
+        _coyoteSettings.value = safe
+    }
+
+    private fun getCoyoteSettings(): CoyoteSettings {
+        val channelName = preferences.getString(keyCoyoteChannel, null)
+        val channel = CoyoteChannel.entries.find { it.name == channelName } ?: CoyoteChannel.A
+        return CoyoteSettings(
+            deviceAddress = preferences.getString(keyCoyoteDeviceAddress, null) ?: "",
+            deviceName = preferences.getString(keyCoyoteDeviceName, null) ?: "",
+            initialStrength = preferences.getInt(keyCoyoteInitialStrength, 5),
+            maxStrength = preferences.getInt(keyCoyoteMaxStrength, 30),
+            startAngle = preferences.getFloat(keyCoyoteStartAngle, 10f),
+            fullAngle = preferences.getFloat(keyCoyoteFullAngle, 60f),
+            channel = channel
+        ).sanitized()
+    }
     //endregion
 
     //region # Other settings

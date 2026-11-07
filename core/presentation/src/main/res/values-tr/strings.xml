@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Commmon -->
-    <string name="app_name" translatable="false">Look4Sat</string>
+    <string name="app_name" translatable="false">DG4Sat</string>
     <string name="btn_accept">Kabul et</string>
     <string name="btn_cancel">İptal</string>
     <string name="empty_list_message">Gösterilecek veri bulunamadı</string>
@@ -49,11 +49,11 @@
     <string name="pass_empty_list_message">
         Filtrelerinizin doğru olduğundan ve uydu seçtiğinizden emin olun</string>
     <string name="pass_error_message">Gösterilecek yaklaşan uydu geçişi bulunmuyor</string>
-    <string name="pass_welcome_title">Look4Sat\'a hoş geldiniz\!</string>
+    <string name="pass_welcome_title">DG4Sat\'a hoş geldiniz\!</string>
     <string name="pass_welcome_message">
         Ayarlar\'dan GPS, Enlem/Boylam veya QTH kullanarak konumunuzu belirlediğinizden emin olun.
         \n\nDoğru tahminler alabilmek için veritabanını en az haftada bir güncelleyin.</string>
-    <string name="pass_whatsnew_title" translatable="false">What\'s new in Look4Sat</string>
+    <string name="pass_whatsnew_title" translatable="false">What\'s new in DG4Sat</string>
     <string name="pass_whatsnew_message" translatable="false">
         * Switched to short-form commands in NetworkReporter, by theojalba
         \n* Added CAT radio control for full-duplex SAT operation, by jcmerg
@@ -107,7 +107,7 @@
     <string name="map_visible">Görünür</string>
 
     <!-- Settings screen -->
-    <string name="prefs_app_title" translatable="false">Look4Sat v%s</string>
+    <string name="prefs_app_title" translatable="false">DG4Sat v%s</string>
     <string name="prefs_app_url" translatable="false">https://play.google.com/store/apps/details?id=com.rtbishop.look4sat</string>
     <string name="prefs_donate_title">Bağış yap</string>
     <string name="prefs_donate_url" translatable="false">https://ko-fi.com/rt_bishop</string>

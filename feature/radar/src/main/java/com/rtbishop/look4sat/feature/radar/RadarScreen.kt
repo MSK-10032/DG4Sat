@@ -47,6 +47,7 @@ import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -60,6 +61,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.rtbishop.look4sat.core.domain.predict.OrbitalPos
@@ -82,7 +86,8 @@ import kotlinx.coroutines.launch
 private enum class RadarPage(val title: String) {
     Transceivers("Transceivers"),
     Calculator("Calculator"),
-    Sstv("SSTV")
+    Sstv("SSTV"),
+    DgLab("DG-LAB")
 }
 
 @Composable
@@ -91,6 +96,19 @@ fun RadarDestination(navigateUp: () -> Unit) {
     val container = (context.applicationContext as IContainerProvider).getMainContainer()
     val viewModel: RadarViewModel = viewModel(factory = RadarViewModel.factory(container))
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val lifecycleOwner = LocalLifecycleOwner.current
+    // Never keep stimulating while the app is in the background.
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_STOP) viewModel.onAction(RadarAction.DisarmCoyote)
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+    // Leaving the radar screen always disarms, even if the ViewModel is cached by navigation.
+    DisposableEffect(Unit) {
+        onDispose { viewModel.onAction(RadarAction.DisarmCoyote) }
+    }
     // Sync actual permission state on every recomposition so it survives screen re-entry
     val hasPermission = ContextCompat.checkSelfPermission(
         context, Manifest.permission.RECORD_AUDIO
@@ -200,6 +218,7 @@ private fun PagerCard(
             add(RadarPage.Transceivers)
             if (hasCalculatorPage) add(RadarPage.Calculator)
             add(RadarPage.Sstv)
+            add(RadarPage.DgLab)
         }
     }
     val pagerState = rememberPagerState(pageCount = { pages.size })
@@ -246,6 +265,11 @@ private fun PagerCard(
                         onAction = onAction,
                         requestMicPermission = requestMicPermission,
                         requestSaveImage = requestSaveImage
+                    )
+                    RadarPage.DgLab -> DgLabPage(
+                        settings = uiState.coyoteSettings,
+                        state = uiState.coyote,
+                        onAction = onAction
                     )
                 }
             }

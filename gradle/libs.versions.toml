@@ -11,6 +11,8 @@ minSdk = "24"
 jdkVersion = "21"
 #noinspection UnusedVersionCatalogEntry
 packageName = "com.rtbishop.look4sat"
+#noinspection UnusedVersionCatalogEntry
+appId = "top.bravocn.dg4sat"
 
 android-gradle-plugin = "9.4.1"
 

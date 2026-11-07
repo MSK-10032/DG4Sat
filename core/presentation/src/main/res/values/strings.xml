@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Commmon -->
-    <string name="app_name" translatable="false">Look4Sat</string>
+    <string name="app_name" translatable="false">DG4Sat</string>
     <string name="btn_accept">Accept</string>
     <string name="btn_cancel">Cancel</string>
     <string name="empty_list_message">No data to show</string>
@@ -54,11 +54,11 @@
         Make sure your filters are correct and you have selected satellites</string>
     <string name="pass_empty_search_message">No upcoming passes match your search</string>
     <string name="pass_error_message">There are no upcoming satellite passes to display</string>
-    <string name="pass_welcome_title">Welcome to Look4Sat\!</string>
+    <string name="pass_welcome_title">Welcome to DG4Sat\!</string>
     <string name="pass_welcome_message">
         Make sure to set your position via GPS, Lat/Lon or QTH in Settings.
         \n\nPlease update the database at least weekly to get accurate predictions.</string>
-    <string name="pass_whatsnew_title" translatable="false">What\'s new in Look4Sat</string>
+    <string name="pass_whatsnew_title" translatable="false">What\'s new in DG4Sat</string>
     <string name="pass_whatsnew_message" translatable="false">
         * Added AOS/LOS timers to PassItem and NextPassRow components
         \n\n* Replaced Swipe-to-Filter functionality with a Search bar
@@ -176,7 +176,7 @@
     <string name="map_visible">Visible</string>
 
     <!-- Settings screen -->
-    <string name="prefs_app_title" translatable="false">Look4Sat v%s</string>
+    <string name="prefs_app_title" translatable="false">DG4Sat v%s</string>
     <string name="prefs_app_url" translatable="false">https://play.google.com/store/apps/details?id=com.rtbishop.look4sat</string>
     <string name="prefs_donate_title">Donate</string>
     <string name="prefs_donate_url" translatable="false">https://ko-fi.com/rt_bishop</string>
@@ -295,5 +295,51 @@
 
     <!-- Main screen -->
     <string name="tracking_format">Tracking: %s</string>
+
+    <!-- DG-LAB -->
+    <string name="dglab_title">DG-LAB</string>
+    <string name="dglab_status_disconnected">Coyote not connected</string>
+    <string name="dglab_status_connecting">Connecting to Coyote…</string>
+    <string name="dglab_status_connected">Coyote connected</string>
+    <string name="dglab_battery">Battery %1$d%%</string>
+    <string name="dglab_scan">Scan for Coyote</string>
+    <string name="dglab_stop_scan">Stop scan</string>
+    <string name="dglab_connect">Connect</string>
+    <string name="dglab_disconnect">Disconnect</string>
+    <string name="dglab_connect_saved">Last device</string>
+    <string name="dglab_scanning">Scanning for Coyote V3 (47L121000) / V2 (D-LAB ESTIM01)…</string>
+    <string name="dglab_no_devices_found">No Coyote found yet. Keep the host awake and nearby.</string>
+    <string name="dglab_connect_hint">Turn the Coyote host on, then scan and connect over BLE.</string>
+    <string name="dglab_permission_denied">Bluetooth permission is required</string>
+    <string name="dglab_error_bt_unavailable">Bluetooth LE is not available on this device</string>
+    <string name="dglab_error_bt_off">Turn Bluetooth on</string>
+    <string name="dglab_error_permission">Bluetooth permission denied</string>
+    <string name="dglab_error_scan">Bluetooth scan failed</string>
+    <string name="dglab_error_connect">Could not connect to the Coyote host</string>
+    <string name="dglab_error_lost">Coyote connection lost</string>
+    <string name="dglab_error_unsupported">This device is not a supported Coyote host</string>
+    <string name="dglab_error_gatt">Bluetooth GATT error</string>
+    <string name="dglab_error_not_connected">Connect to the Coyote host first</string>
+    <string name="dglab_error_no_saved">No saved Coyote device</string>
+    <string name="dglab_live_title">Pointing link</string>
+    <string name="dglab_deviation">Deviation</string>
+    <string name="dglab_intensity">Output</string>
+    <string name="dglab_target_valid">Satellite is above the horizon</string>
+    <string name="dglab_target_invalid">Target is below the horizon or the compass is not ready: output is blocked</string>
+    <string name="dglab_arm">Automatic output</string>
+    <string name="dglab_arm_hint">Starts above the start angle; strength grows with deviation.</string>
+    <string name="dglab_panic">STOP NOW</string>
+    <string name="dglab_settings_title">Output settings</string>
+    <string name="dglab_initial_strength">Initial strength</string>
+    <string name="dglab_max_strength">Maximum strength</string>
+    <string name="dglab_start_angle">Start angle</string>
+    <string name="dglab_full_angle">Full-strength angle</string>
+    <string name="dglab_channel">Channel</string>
+    <string name="dglab_channel_a">A</string>
+    <string name="dglab_channel_b">B</string>
+    <string name="dglab_channel_both">A+B</string>
+    <string name="dglab_curve">Deviation ≤ %1$d°: no output. At %2$d°: %3$d%% (initial %4$d%%).</string>
+    <string name="dglab_pointing_note">Point the top edge of the phone; this matches the radar crosshair. Enable the compass for best results.</string>
+    <string name="dglab_soft_limit_note">V3: the maximum is also written to the host soft limit and stays active after disconnecting. V2: only the app limits the intensity.</string>
 
 </resources>

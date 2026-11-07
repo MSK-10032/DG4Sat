@@ -57,15 +57,12 @@ internal fun Project.setupAndroidApp() {
         namespace = libs.versions.packageName.get()
         compileSdk = libs.versions.compileSdk.get().toInt()
         defaultConfig {
-            applicationId = libs.versions.packageName.get()
+            applicationId = libs.versions.appId.get()
             minSdk = libs.versions.minSdk.get().toInt()
             versionCode = libs.versions.appVersionCode.get().toInt()
             versionName = libs.versions.appVersionName.get()
         }
         buildTypes {
-            debug {
-                applicationIdSuffix = ".debug"
-            }
             release {
                 isMinifyEnabled = true
                 isShrinkResources = true

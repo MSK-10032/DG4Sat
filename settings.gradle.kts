@@ -13,7 +13,7 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = "Look4Sat"
+rootProject.name = "DG4Sat"
 include(":app")
 include(
     ":core:data",

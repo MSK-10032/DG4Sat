@@ -17,6 +17,10 @@
  */
 package com.rtbishop.look4sat.feature.radar
 
+import com.rtbishop.look4sat.core.domain.model.CoyoteChannel
+import com.rtbishop.look4sat.core.domain.model.CoyoteDevice
+import com.rtbishop.look4sat.core.domain.model.CoyoteSettings
+import com.rtbishop.look4sat.core.domain.model.CoyoteState
 import com.rtbishop.look4sat.core.domain.model.SatRadio
 import com.rtbishop.look4sat.core.domain.predict.CelestialComputer
 import com.rtbishop.look4sat.core.domain.predict.OrbitalPass
@@ -64,7 +68,9 @@ data class RadarState(
     val transceivers: TransceiverSubState = TransceiverSubState(),
     val radioControl: RadioControlSubState = RadioControlSubState(),
     val sstv: SstvSubState = SstvSubState(),
-    val calculatorOffsetKHz: String = ""
+    val calculatorOffsetKHz: String = "",
+    val coyoteSettings: CoyoteSettings = CoyoteSettings(),
+    val coyote: CoyoteState = CoyoteState()
 )
 
 enum class SstvStatus { Idle, Recording }
@@ -102,6 +108,21 @@ sealed interface RadarAction {
 
     // Calculator actions
     data class ChangeCalculatorOffset(val offsetKHz: String) : RadarAction
+
+    // DG-LAB Coyote actions
+    data class SetCoyoteInitialStrength(val value: Int) : RadarAction
+    data class SetCoyoteMaxStrength(val value: Int) : RadarAction
+    data class SetCoyoteStartAngle(val value: Float) : RadarAction
+    data class SetCoyoteFullAngle(val value: Float) : RadarAction
+    data class SetCoyoteChannel(val channel: CoyoteChannel) : RadarAction
+    data object ToggleCoyoteArm : RadarAction
+    data object DisarmCoyote : RadarAction
+    data object PanicCoyote : RadarAction
+    data class ConnectCoyote(val device: CoyoteDevice) : RadarAction
+    data object ConnectSavedCoyote : RadarAction
+    data object DisconnectCoyote : RadarAction
+    data object StartCoyoteScan : RadarAction
+    data object StopCoyoteScan : RadarAction
 
     /**
      * The transponder currently driving the calculator (null when the satellite has
