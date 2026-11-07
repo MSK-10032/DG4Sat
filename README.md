@@ -1,3 +1,16 @@
+# DG4Sat: Look4Sat基于DG-LAB的自动提醒功能
+在平常打卫星的时候, 我们可能会因为其它的事情忘记转动天线使其对准卫星, 因此我(BA4IHR)使用DeepSeek V4.1 Flash对原版的Look4Sat进行了改进, 当我们的准心和卫星的偏离程度较大时, Look4Sat会通过蓝牙启动DG-LAB的电击以提醒我们关注天线位置
+- [x] 设置启动阈值
+- [x] 设置强度范围
+- [x] 输出通道选择
+
+鸣谢以下项目:[Look4Sat](https://github.com/rt-bishop/Look4Sat)&[dglab-bluetooth-protocol](https://github.com/dungeonlab-open/dglab-bluetooth-protocol)
+
+<img width="300" alt="Screenshot_2026-11-07-22-25-16-720_top bravocn dg4sat" src="https://github.com/user-attachments/assets/9b60555c-6c17-4018-9649-c35122410cab" />
+<img width="300" alt="Screenshot_2026-11-07-22-25-22-611_top bravocn dg4sat" src="https://github.com/user-attachments/assets/e1ec41ab-3d2e-43e6-aad2-f8a2812cea1d" />
+<img width="300" alt="Screenshot_2026-11-07-22-25-25-113_top bravocn dg4sat" src="https://github.com/user-attachments/assets/1754d61f-b306-462b-8fce-bb62465235a4" />
+
+
 # Look4Sat: Satellite tracker
 
 [![Look4Sat CI](https://github.com/rt-bishop/Look4Sat/actions/workflows/release.yml/badge.svg)](https://github.com/rt-bishop/Look4Sat/actions/workflows/release.yml)
